@@ -17,34 +17,38 @@ export async function preprocessImage(imageBuffer, outputPath) {
   const processedBuffer = await image.getBufferAsync(Jimp.MIME_PNG)
 
   // Criar um objeto Canvas e carregar a imagem
-  const canvas = createCanvas(image.bitmap.width, image.bitmap.height)
+  const { width, height } = image.bitmap
+  const canvas = createCanvas(width, height)
   const ctx = canvas.getContext('2d')
   const img = await loadImage(processedBuffer)
 
+  // Desenhar a imagem no canvas
   ctx.drawImage(img, 0, 0)
-  const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height)
 
-  // Carregar a imagem no OpenCV
+  // Converter Canvas ImageData para Mat do OpenCV
+  const imageData = ctx.getImageData(0, 0, width, height)
   const src = cv.matFromImageData(imageData)
   const dst = new cv.Mat()
 
   // Aplicar binarização (thresholding)
   cv.threshold(src, dst, 128, 255, cv.THRESH_BINARY)
 
-  // Converter a imagem processada de volta para Jimp
-  const data = Buffer.from(dst.data)
+  // Converter a imagem processada de volta para um buffer
+  const processedImageBuffer = Buffer.from(dst.data)
+
+  // Criar uma nova instância Jimp a partir do buffer processado
   const processedImage = new Jimp({
     width: dst.cols,
     height: dst.rows,
-    data,
+    data: processedImageBuffer,
   })
 
   // Salvar a imagem preprocessada
   await processedImage.writeAsync(outputPath)
 
-  // Liberar a memória
+  // Liberar a memória do OpenCV
   src.delete()
   dst.delete()
 
-  return processedBuffer
+  return processedImageBuffer
 }
