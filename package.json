@@ -1,0 +1,37 @@
+{
+  "name": "trello",
+  "version": "1.0.0",
+  "type": "module",
+  "main": "index.js",
+  "scripts": {
+    "dev": "node src/server.js",
+    "build": "echo 'Skipping build step' && exit 0"
+   
+  },
+    "packageManager": "npm@>=6.0.0",
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "dependencies": {
+    "@techstark/opencv-js": "^4.9.0-release.3",
+    "axios": "^1.7.2",
+    "axios-oauth-1.0a": "^0.3.6",
+    "canvas": "^2.11.2",
+    "dotenv": "^16.4.5",
+    "fastify": "^4.28.1",
+    "fs": "^0.0.1-security",
+    "jimp": "^0.22.12",
+    "node-fetch": "^3.3.2",
+    "openai": "^4.52.7",
+    "sharp": "^0.33.4",
+    "tesseract.js": "^5.1.0",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@rocketseat/eslint-config": "^2.2.2",
+    "@types/node": "^22.4.0",
+    "eslint": "^8.57.0"
+  
+  }
+}
