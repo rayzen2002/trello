@@ -1,5 +1,6 @@
 import { z } from 'zod'
 import { main } from '../../ngsTrelloHelper/trello.js'
+import { performance } from 'perf_hooks'
 
 function logMemoryUsage() {
   const memoryUsage = process.memoryUsage()
@@ -11,6 +12,18 @@ function logMemoryUsage() {
   })
 }
 
+export function logPerformance() {
+  const memoryUsage = process.memoryUsage()
+  console.log('Memory Usage:', {
+    rss: memoryUsage.rss / 1024 / 1024,
+    heapTotal: memoryUsage.heapTotal / 1024 / 1024,
+    heapUsed: memoryUsage.heapUsed / 1024 / 1024,
+    external: memoryUsage.external / 1024 / 1024,
+  })
+
+  const now = performance.now()
+  console.log('Current Performance Time:', now)
+}
 export async function editCard(server) {
   server.post('/edit', async (req, res) => {
     const cardSchema = z.object({

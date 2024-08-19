@@ -6,49 +6,63 @@ dotenv.config()
 
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY })
 
-export async function readAttachments(documents) {
+export async function readAttachments(documents, batchSize = 10) {
   const worker = await createWorker('por+eng')
   await worker.load()
   await worker.loadLanguage('por+eng')
 
-  const extractedTexts = await Promise.all(
-    documents.map(async (doc) => {
-      try {
-        const {
-          data: { text },
-        } = await worker.recognize(doc)
-        return text
-      } catch (error) {
-        console.error(`Error processing document ${doc}:`, error)
-        return ''
-      }
-    }),
-  )
+  const processBatch = async (batch) => {
+    const extractedTexts = await Promise.all(
+      batch.map(async (doc) => {
+        try {
+          const {
+            data: { text },
+          } = await worker.recognize(doc)
+          return text
+        } catch (error) {
+          console.error(`Erro ao processar o documento ${doc}:`, error)
+          return ''
+        }
+      }),
+    )
+
+    const processedData = await Promise.all(
+      extractedTexts.map(async (text) => {
+        try {
+          const response = await openai.chat.completions.create({
+            messages: [
+              {
+                role: 'system',
+                content: `
+                              Você é um especialista em extração de dados de CNH. Extraia a data de nascimento, data de emissão do documento, e o número de registro do documento, identifique se é um documento Americano ou de outro país, se for Americano, diga o Estado ao qual o documento é referente e em seguida formate essas informações dos documentos. Texto OCR:
+                              ${text}
+                              `,
+              },
+            ],
+            model: 'gpt-3.5-turbo',
+          })
+          return response.choices[0].message.content
+        } catch (error) {
+          console.error('Erro ao processar o texto com OpenAI:', error)
+          return ''
+        }
+      }),
+    )
+
+    return processedData
+  }
+
+  const results = []
+  for (let i = 0; i < documents.length; i += batchSize) {
+    const batch = documents.slice(i, i + batchSize)
+    results.push(processBatch(batch))
+  }
+
+  const allResults = await Promise.all(results)
 
   await worker.terminate()
 
-  return Promise.all(
-    extractedTexts.map(async (text) => {
-      try {
-        const response = await openai.chat.completions.create({
-          messages: [
-            {
-              role: 'system',
-              content: `
-              Você é um especialista em extração de dados de CNH. Extraia a data de nascimento, data de emissão do documento, e o número de registro do documento, identifique se é um documento Americano ou de outro país, se for Americano, diga o Estado ao qual o documento é referente e em seguida formate essas informações dos documentos. Texto OCR:
-              ${text}
-              `,
-            },
-          ],
-          model: 'gpt-3.5-turbo',
-        })
-        return response.choices[0].message.content
-      } catch (error) {
-        console.error('Erro ao processar o texto com OpenAI:', error)
-        return ''
-      }
-    }),
-  )
+  return allResults.flat()
 }
 
 export async function mixingDescriptionWithTemplate(
@@ -113,7 +127,7 @@ Dados extraídos dos documentos: ${documentsInfoArray}
 
 - Apenas complete os campos referentes a DOB, e data da 1driver e data da 1CNH.
 - O campo DATA DA 1ª CNH só deve ser preenchido caso tenha sido fornecido um documento que não seja uma driver Americana, como por exemplo, uma CNH Brasileira.
-- O campo DRIVER NUMBER deve ser preenchido dando preferencia ao numéro de uma driver americana, apenas em casos onde não seja apresentado uma driver americana e apenas um documento estrangeiro, que este campo será preenchido com o numero do documento estrangeiro.
+- O campo DRIVER NUMBER deve ser preenchido dando preferencia ao numéro de uma driver americana, apenas em casos onde não seja apresentado uma driver americana e apenas um documento estrangeiro, que este campo será preenchido com o numero
 - Não altere a estrutura do template. Apenas adicione as informações nos campos correspondentes.
 - Garanta que o texto seja tratado como texto simples, sem qualquer formatação de lista ou Markdown.
 - Remove todos os '-' antes de qualquer informação na resposta final

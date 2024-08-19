@@ -5,6 +5,7 @@ import dotenv from 'dotenv'
 import { fileURLToPath } from 'url'
 import { mixingDescriptionWithTemplate, readAttachments } from './openai.js'
 import { preprocessImage } from './preprocessImage.js'
+import { logPerformance } from '../src/routes/edit-card.js'
 
 dotenv.config()
 
@@ -147,8 +148,10 @@ export async function main() {
       const outputPath = path.join(preprocessedDir, `preprocessed_${file}`)
 
       // Preprocessar a imagem
-      await preprocessImage(imageBuffer, outputPath)
+      logPerformance()
 
+      await preprocessImage(imageBuffer, outputPath)
+      logPerformance()
       // Ler a imagem preprocessada
       const processedImageBuffer = fs.readFileSync(outputPath)
       processedImages.push(processedImageBuffer)
@@ -159,7 +162,7 @@ export async function main() {
     if (!documentsInfo) {
       throw new Error('Falha ao extrair informações do documento')
     }
-
+    console.log('Finalizei download das imagens')
     const newDescription = await mixingDescriptionWithTemplate(
       description,
       documentsInfo,
