@@ -1,79 +1,54 @@
 import OpenAI from 'openai/index.mjs'
 import dotenv from 'dotenv'
 import { createWorker } from 'tesseract.js'
-import sharp from 'sharp'
-import fs from 'fs'
 
 dotenv.config()
 
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY })
 
-async function preprocessImage(imageBuffer) {
-  const processedImage = await sharp(imageBuffer)
-    .resize({ width: 2000 })
-    .grayscale()
-    .normalize()
-    .toBuffer()
-  return processedImage
-}
-
 export async function readAttachments(documents) {
-  const worker = await createWorker("por+eng")
+  const worker = await createWorker('por+eng')
   await worker.load()
   await worker.loadLanguage('por+eng')
- 
 
-  const extractedTexts = []
-
-  for (const doc of documents) {
-    try {
-      // const imageBuffer = fs.readFileSync(doc)
-      // const preprocessedImage = await preprocessImage(imageBuffer)
-      const {
-        data: { text },
-      } = await worker.recognize(doc)
-      extractedTexts.push(text)
-    } catch (error) {
-      console.error(`Error processing document ${doc}:`, error)
-    }
-  }
-
-  const documentsData = await Promise.all(
-    extractedTexts.map(async (text) => {
-      const response = await openai.chat.completions.create({
-        messages: [
-          {
-            role: 'system',
-            content: `
-You are an expert in extracting and formatting data from Driver's Licenses. I will provide you with OCR text from a document. Your task is to determine if it is a Brazilian Driver's License (CNH) or an American Driver's License and extract the relevant details.
-
-For a Brazilian Driver's License (CNH), extract and format the following:
-- **Name**: Look for full name keywords.
-- **DOB**: Look for 'DATA NASCIMENTO' or similar and format as MM/DD/YYYY.
-- **CNH Number**: Look for 'REGISTRO' or similar with 9 digits.
-- **Issue Date**: Look for 'DATA 1 CNH' or similar and format as MM/DD/YYYY.
-
-For an American Driver's License, extract and format the following:
-- **Name**: Look for the full name.
-- **DOB**: Look for 'DATE OF BIRTH (DOB)' and format as MM/DD/YYYY.
-- **Driver Number**: Look for 'DRIVER NUMBER' or similar with a number.
-- **Issue Date**: Look for 'ISS' or 'ISSUE DATE' and format as MM/DD/YYYY.
-
-OCR Text:
-${text}
-
-`,
-          },
-        ],
-        model: 'gpt-3.5-turbo',
-      })
-
-      return response.choices[0].message.content
+  const extractedTexts = await Promise.all(
+    documents.map(async (doc) => {
+      try {
+        const {
+          data: { text },
+        } = await worker.recognize(doc)
+        return text
+      } catch (error) {
+        console.error(`Error processing document ${doc}:`, error)
+        return ''
+      }
     }),
   )
 
   await worker.terminate()
-  return documentsData
+
+  return Promise.all(
+    extractedTexts.map(async (text) => {
+      try {
+        const response = await openai.chat.completions.create({
+          messages: [
+            {
+              role: 'system',
+              content: `
+              Você é um especialista em extração de dados de CNH. Extraia a data de nascimento, data de emissão do documento, e o número de registro do documento, identifique se é um documento Americano ou de outro país, se for Americano, diga o Estado ao qual o documento é referente e em seguida formate essas informações dos documentos. Texto OCR:
+              ${text}
+              `,
+            },
+          ],
+          model: 'gpt-3.5-turbo',
+        })
+        return response.choices[0].message.content
+      } catch (error) {
+        console.error('Erro ao processar o texto com OpenAI:', error)
+        return ''
+      }
+    }),
+  )
 }
 
 export async function mixingDescriptionWithTemplate(
@@ -136,15 +111,17 @@ Remember:
 Template a ser preenchido: ${fillingTheTemplate.choices[0].message.content}
 Dados extraídos dos documentos: ${documentsInfoArray}
 
-- Apenas mude algo do template, caso o nome extraído do documento seja igual ao nome já contido no template.
-- Preencha os campos com as informações apropriadas.
+- Apenas complete os campos referentes a DOB, e data da 1driver e data da 1CNH.
+- O campo DATA DA 1ª CNH só deve ser preenchido caso tenha sido fornecido um documento que não seja uma driver Americana, como por exemplo, uma CNH Brasileira.
+- O campo DRIVER NUMBER deve ser preenchido dando preferencia ao numéro de uma driver americana, apenas em casos onde não seja apresentado uma driver americana e apenas um documento estrangeiro, que este campo será preenchido com o numero do documento estrangeiro.
 - Não altere a estrutura do template. Apenas adicione as informações nos campos correspondentes.
-- Deixe os campos não fornecidos vazios.
-- Lembre-se que isso irá preencher um quadro Trello, então mantenha a formatação padrão, sem markdown
-- Apresente o texto de forma direta, sem adicionar bullet points, listas ou formatação extra.
-- Remova qualquer marcação ou formatação adicional que possa transformar o texto em listas ou alterar a formatação ao ser adicionado a um card do Trello.
 - Garanta que o texto seja tratado como texto simples, sem qualquer formatação de lista ou Markdown.
 - Remove todos os '-' antes de qualquer informação na resposta final
+- Revise todo o documento removendo todas as possiveis formatações que possam ter sido adicionadas no processo, transforme todo o conteúdo em letras maiúsculas.
+- Preencha as datas no template no formato MM/DD/YYYY.
+- Informe o pais e estado a qual pertence o documento no campo DRIVER NUMBER, da seguinte forma NUMBER - COUNTRY - STATE
+- Revise as informações que já foram preenchidas no template e não repita informações no final
+
 `,
       },
     ],
