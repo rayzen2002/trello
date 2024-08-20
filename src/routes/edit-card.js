@@ -1,5 +1,5 @@
 import { z } from 'zod'
-import { main } from '../../ngsTrelloHelper/trello.js'
+import { descriptionOnTemplate } from '../../ngsTrelloHelper/trello.js'
 import { performance } from 'perf_hooks'
 
 function logMemoryUsage() {
@@ -34,7 +34,7 @@ export async function editCard(server) {
 
     try {
       const card = cardSchema.parse(req.body)
-      await main(card)
+      await descriptionOnTemplate(card.id)
       logMemoryUsage() // Log após execução principal
 
       res.status(200).send({ message: 'Card alterado com sucesso' })
