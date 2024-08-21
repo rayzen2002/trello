@@ -30,55 +30,55 @@ export async function descriptionOnTemplate(id) {
   }
 }
 
-export async function fillingWithExtractedData(id) {
-  const description = await getCardDesc(id)
-  await downloadAllAttachments(id)
-  const imageFiles = fs.readdirSync(downloadsDir).filter((file) => {
-    return (
-      file.endsWith('.png') ||
-      file.endsWith('.jpg') ||
-      file.endsWith('.jpeg') ||
-      file.endsWith('.pdf')
-    )
-  })
-  if (imageFiles.length === 0) {
-    console.log(`No images found in the directory: ${downloadsDir}`)
-    throw new Error(`No images found in the directory: ${downloadsDir}`)
-  }
-  const processedImages = []
-  for (const file of imageFiles) {
-    const imagePath = path.join(downloadsDir, file)
-    const imageBuffer = fs.readFileSync(imagePath)
-    const outputPath = path.join(preprocessedDir, `preprocessed_${file}`)
-    // Preprocessar a imagem
-    logPerformance()
-    await preprocessImage(imageBuffer, outputPath)
-    logPerformance()
-    // Ler a imagem preprocessada
-    const processedImageBuffer = fs.readFileSync(outputPath)
-    processedImages.push(processedImageBuffer)
-  }
-  const documentsInfo = await readAttachments(processedImages)
-  if (!documentsInfo) {
-    throw new Error('Falha ao extrair informações do documento')
-  }
-  console.log('Finalizei download das imagens')
-  const newDescription = await mixingDescriptionWithTemplate(
-    description,
-    documentsInfo,
-  )
-  if (!newDescription) {
-    throw new Error('Falha ao gerar nova descrição')
-  }
-  for (const file of imageFiles) {
-    const imagePath = path.join(downloadsDir, file)
-    fs.unlinkSync(imagePath)
-    console.log(`Deleted ${file} from ${downloadsDir}`)
-    const preprocessedImagePath = path.join(
-      preprocessedDir,
-      `preprocessed_${file}`,
-    )
-    fs.unlinkSync(preprocessedImagePath)
-    console.log(`Deleted preprocessed_${file} from ${preprocessedDir}`)
-  }
-}
+// export async function fillingWithExtractedData(id) {
+//   const description = await getCardDesc(id)
+//   await downloadAllAttachments(id)
+//   const imageFiles = fs.readdirSync(downloadsDir).filter((file) => {
+//     return (
+//       file.endsWith('.png') ||
+//       file.endsWith('.jpg') ||
+//       file.endsWith('.jpeg') ||
+//       file.endsWith('.pdf')
+//     )
+//   })
+//   if (imageFiles.length === 0) {
+//     console.log(`No images found in the directory: ${downloadsDir}`)
+//     throw new Error(`No images found in the directory: ${downloadsDir}`)
+//   }
+//   const processedImages = []
+//   for (const file of imageFiles) {
+//     const imagePath = path.join(downloadsDir, file)
+//     const imageBuffer = fs.readFileSync(imagePath)
+//     const outputPath = path.join(preprocessedDir, `preprocessed_${file}`)
+//     // Preprocessar a imagem
+//     logPerformance()
+//     await preprocessImage(imageBuffer, outputPath)
+//     logPerformance()
+//     // Ler a imagem preprocessada
+//     const processedImageBuffer = fs.readFileSync(outputPath)
+//     processedImages.push(processedImageBuffer)
+//   }
+//   const documentsInfo = await readAttachments(processedImages)
+//   if (!documentsInfo) {
+//     throw new Error('Falha ao extrair informações do documento')
+//   }
+//   console.log('Finalizei download das imagens')
+//   const newDescription = await mixingDescriptionWithTemplate(
+//     description,
+//     documentsInfo,
+//   )
+//   if (!newDescription) {
+//     throw new Error('Falha ao gerar nova descrição')
+//   }
+//   for (const file of imageFiles) {
+//     const imagePath = path.join(downloadsDir, file)
+//     fs.unlinkSync(imagePath)
+//     console.log(`Deleted ${file} from ${downloadsDir}`)
+//     const preprocessedImagePath = path.join(
+//       preprocessedDir,
+//       `preprocessed_${file}`,
+//     )
+//     fs.unlinkSync(preprocessedImagePath)
+//     console.log(`Deleted preprocessed_${file} from ${preprocessedDir}`)
+//   }
+// }
