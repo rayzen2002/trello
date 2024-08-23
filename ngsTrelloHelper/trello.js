@@ -20,7 +20,6 @@ const downloadsDir = path.join(__dirname, 'downloads')
 const preprocessedDir = path.join(__dirname, 'preprocessed')
 
 export async function descriptionOnTemplate(id) {
-  console.log(id)
   try {
     const description = await getCardDesc(id)
     const middleDescription = await templateCard(description)

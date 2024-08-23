@@ -5,7 +5,7 @@ import { createWorker } from 'tesseract.js'
 dotenv.config()
 
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY })
-
+// OCR => Recebe os documentos e extrai os dados e passa pela IA para organizar em uma lista de dados do cliente
 export async function readAttachments(documents, batchSize = 10) {
   const worker = await createWorker('por+eng')
 
@@ -88,6 +88,7 @@ export async function readAttachments(documents, batchSize = 10) {
 
   return allResults.flat()
 }
+// Primeira chamada pra criar um template inicial
 export async function templateCard(description) {
   const descriptionOnTemplate = await openai.chat.completions.create({
     messages: [
@@ -128,14 +129,16 @@ export async function templateCard(description) {
           - Fields not specified, leave a blank space.
           - CONVERT ALL DATES TO THE FORMAT MM/DD/YYYY (if they come from a driver document that isnt american)
           - Ensure that all clients and vehicles are listed separately before listing shared information.
-
-`,
+          - Remove all "-" caracters from the begining of each line
+          - Transform to uppercase the ENDEREÇO field
+          `,
       },
     ],
     model: 'gpt-3.5-turbo',
   })
   return descriptionOnTemplate.choices[0].message.content
 }
+// Mistura os dados do OCR(pos-processados por IA) + card ja no template
 export async function mixingDescriptionWithTemplate(
   description,
   documentsInfoArray,
