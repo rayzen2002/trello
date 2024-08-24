@@ -6,14 +6,14 @@
   "scripts": {
     "dev": "node src/server.js",
     "build": "echo 'Skipping build step' && exit 0"
-   
   },
-    "packageManager": "npm@>=6.0.0",
+  "packageManager": "npm@>=6.0.0",
   "keywords": [],
   "author": "",
   "license": "ISC",
   "description": "",
   "dependencies": {
+    "@fastify/cors": "^9.0.1",
     "@techstark/opencv-js": "^4.9.0-release.3",
     "axios": "^1.7.2",
     "axios-oauth-1.0a": "^0.3.6",
@@ -32,6 +32,5 @@
     "@rocketseat/eslint-config": "^2.2.2",
     "@types/node": "^22.4.0",
     "eslint": "^8.57.0"
-  
   }
 }
