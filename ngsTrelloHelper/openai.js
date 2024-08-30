@@ -121,6 +121,7 @@ export async function templateCard(description) {
           SOBRENOME GEICO: 
 
           Remember:
+          - Identify the car model based on the provided VIN, and then fill in the VEÍCULO field with the format: Year - Name of the Vehicle (e.g., 2008 - Dodge Ram 1500). Make sure the year and the model name are correctly matched to the VIN.
           - First list all clients, second list all vehicles and third list the restant of the template.
           - EVERY CLIENT WILL SHARE THE SAME ADDRESS, EMAIL, SOBRENOME PROGRESSIVE AND SOBRENOME GEICO.
           - If there are more than one client, split the names using the hyphen ("-") and create a template for each client containing the fields: CLIENTE, DRIVER, CNH, DOB, DATA DA 1ª CNH, DATA DA 1ª DRIVER.
