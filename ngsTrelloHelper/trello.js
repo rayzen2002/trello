@@ -7,7 +7,7 @@ import {
   templateCard,
 } from './openai.js'
 import { preprocessImage } from './preprocessImage.js'
-import { logPerformance } from '../src/routes/edit-card.js'
+// import { logPerformance } from '../src/routes/edit-card.js'
 import { editCard } from './helpers/edit-card.js'
 import { getCardDesc } from './helpers/get-card-description.js'
 import { downloadAllAttachments } from './helpers/download-all-attachments.js'
@@ -22,6 +22,9 @@ const preprocessedDir = path.join(__dirname, 'preprocessed')
 export async function descriptionOnTemplate(id) {
   try {
     const description = await getCardDesc(id)
+    if (!description) {
+      throw new Error('Card inexistente')
+    }
     const middleDescription = await templateCard(description)
     await editCard(id, `${description} \n\n---\n\n${middleDescription}`)
   } catch (error) {
