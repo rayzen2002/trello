@@ -95,44 +95,87 @@ export async function templateCard(description) {
       {
         role: 'system',
         content: `
-          This is a Trello card description that helps me fill in the fields for my car insurance policy.
-          I need to organize my information here, so take this information: ${description}, and format it in this template.
+        This is a Trello card description that helps me fill in the fields for my car insurance policy.
+        I need to organize my information here, so take this information: ${description}, and format it in this template.
 
-          First, list each client separately. Client names are separated by a hyphen ("-"):
-          For each client:
-          CLIENTE: [NAME]
-          DRIVER NUMBER: 
-          DOB: 
-          DATA DA 1ª CNH: 
-          DATA DA 1ª DRIVER: 
+        ### INSTRUCTIONS:
+        1. **List each client separately.** Client names are separated by a hyphen ("-").
+        2. **For each client**, list the information in the following format:
+            CLIENTE: [NAME]
+            DRIVER NUMBER: 
+            DOB: 
+            DATA DA 1ª CNH: 
+            DATA DA 1ª DRIVER: 
+        3. **List each vehicle separately.** For each vehicle associated with a client, use the following format:
+            VEICULO: [Year - Vehicle Name]
+            VIN: [VIN NUMBER]
+            [FINANCIADO or QUITADO]
+        4. **Finally, list the shared information** for all clients:
+            ENDEREÇO: 
+            E-MAIL: 
+            SENHA: cnh12345678
+            TELEFONE: 
+            SOBRENOME PROGRESSIVE: 
+            SOBRENOME GEICO: 
 
-          Then, list each vehicle separately:
-          For each vehicle:
-          VEICULO: 
-          VIN: [VIN NUMBER]
-          FINANCIADO or QUITADO (indicate status)
+        ### REMINDERS:
+        - Identify the car model based on the provided VIN, and then fill in the VEÍCULO field with the format: Year - Name of the Vehicle (e.g., 2008 - Dodge Ram 1500). Make sure the year and the model name are correctly matched to the VIN.
+        - **Ensure that all clients and vehicles are listed separately before listing shared information.**
+        - **Put everything to uppercase.** Capitalize everything except the password, always keep it as cnh12345678.
+        - If there are more than one vehicle, create a separate entry for each vehicle containing the fields: VEICULO, VIN, FINANCIADO or QUITADO.
+        - The information is in Portuguese. If the word "quitado" appears, change the status from "FINANCIADO" to "QUITADO".
+        - Remove all "-" characters from the beginning of each line.
 
-          After listing all clients and vehicles, include shared information:
-          ENDEREÇO: 
-          E-MAIL: 
-          SENHA: cnh12345678
-          TELEFONE: 
-          SOBRENOME PROGRESSIVE: 
-          SOBRENOME GEICO: 
+        ### EXAMPLE TO FOLLOW:
+        **Input:**
+        ciclano exemplo - emanuel magalhaes martins - fulano belatrano
+        rua monsenhor furtado 591
+        VIN: 19XFB2F52EE252480 FINANCIADO - 19XFB2F52EE252480 FINANCIADO - 19XFB2F52EE252480 QUITADO - 19XFB2F52EE252480 FINANCIADO
 
-          Remember:
-          - Identify the car model based on the provided VIN, and then fill in the VEÍCULO field with the format: Year - Name of the Vehicle (e.g., 2008 - Dodge Ram 1500). Make sure the year and the model name are correctly matched to the VIN.
-          - First list all clients, second list all vehicles and third list the restant of the template.
-          - EVERY CLIENT WILL SHARE THE SAME ADDRESS, EMAIL, SOBRENOME PROGRESSIVE AND SOBRENOME GEICO.
-          - If there are more than one client, split the names using the hyphen ("-") and create a template for each client containing the fields: CLIENTE, DRIVER, CNH, DOB, DATA DA 1ª CNH, DATA DA 1ª DRIVER.
-          - If there are more than one vehicle, create a template for each vehicle containing the fields: VEICULO, VIN, FINANCIADO or QUITADO.
-          - The information is in Portuguese. So, if the word "quitado" appears, change the status from "FINANCIADO" to "QUITADO".
-          - Fields not specified, leave a blank space.
-          - CONVERT ALL DATES TO THE FORMAT MM/DD/YYYY (if they come from a driver document that isnt american)
-          - Ensure that all clients and vehicles are listed separately before listing shared information.
-          - Remove all "-" caracters from the begining of each line
-          - Transform to uppercase the ENDEREÇO field
-          `,
+        **Output:**
+        CLIENTE: CICLANO EXEMPLO
+        DRIVER:
+        DOB: 
+        DATA DA 1ª CNH:
+        DATA DA 1ª DRIVER: NÃO TEM
+
+        CLIENTE: EMANUEL MAGALHAES MARTINS
+        DRIVER:
+        DOB: 
+        DATA DA 1ª CNH:
+        DATA DA 1ª DRIVER: NÃO TEM
+
+        CLIENTE: FULANO BELATRANO
+        DRIVER:
+        DOB: 
+        DATA DA 1ª CNH:
+        DATA DA 1ª DRIVER: NÃO TEM
+
+        ENDEREÇO: RUA MONSENHOR FURTADO 591
+
+        VEICULO: 2014 HONDA CIVIC
+        VIN: 19XFB2F52EE252480
+        FINANCIADO
+
+        VEICULO: 2014 HONDA CIVIC
+        VIN: 19XFB2F52EE252480
+        FINANCIADO
+
+        VEICULO: 2014 HONDA CIVIC
+        VIN: 19XFB2F52EE252480
+        QUITADO
+
+        VEICULO: 2014 HONDA CIVIC
+        VIN: 19XFB2F52EE252480
+        FINANCIADO
+
+        E-MAIL:
+        SENHA: cnh12345678
+        TELEFONE:
+        SOBRENOME PROGRESSIVE:
+        SOBRENOME GEICO:
+
+        `,
       },
     ],
     model: 'gpt-3.5-turbo',
