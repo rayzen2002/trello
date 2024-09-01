@@ -117,6 +117,7 @@ export async function templateCard(description) {
             TELEFONE: 
             SOBRENOME PROGRESSIVE: 
             SOBRENOME GEICO: 
+        5. Remove all formatation included, the card must be with no aditional formatation, only pure text.
 
         ### REMINDERS:
         - Identify the car model based on the provided VIN, and then fill in the VEÍCULO field with the format: Year - Name of the Vehicle (e.g., 2008 - Dodge Ram 1500). Make sure the year and the model name are correctly matched to the VIN.
