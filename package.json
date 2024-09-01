@@ -15,8 +15,9 @@
   "dependencies": {
     "@fastify/cors": "^9.0.1",
     "@techstark/opencv-js": "^4.9.0-release.3",
-    "axios": "^1.7.2",
+    "axios": "^1.7.7",
     "axios-oauth-1.0a": "^0.3.6",
+    "axios-retry": "^4.5.0",
     "canvas": "^2.11.2",
     "dotenv": "^16.4.5",
     "fastify": "^4.28.1",
