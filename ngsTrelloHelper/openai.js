@@ -119,14 +119,6 @@ export async function templateCard(description) {
             SOBRENOME GEICO: 
         5. Remove all formatation included, the card must be with no aditional formatation, only pure text.
 
-        ### REMINDERS:
-        - Identify the car model based on the provided VIN, and then fill in the VEÍCULO field with the format: Year - Name of the Vehicle (e.g., 2008 - Dodge Ram 1500). Make sure the year and the model name are correctly matched to the VIN.
-        - **Ensure that all clients and vehicles are listed separately before listing shared information.**
-        - **Put everything to uppercase.** Capitalize everything except the password, always keep it as cnh12345678.
-        - If there are more than one vehicle, create a separate entry for each vehicle containing the fields: VEICULO, VIN, FINANCIADO or QUITADO.
-        - The information is in Portuguese. If the word "quitado" appears, change the status from "FINANCIADO" to "QUITADO".
-        - Remove all "-" characters from the beginning of each line.
-
         ### EXAMPLE TO FOLLOW:
         **Input:**
         ciclano exemplo - emanuel magalhaes martins - fulano belatrano
@@ -175,6 +167,16 @@ export async function templateCard(description) {
         TELEFONE:
         SOBRENOME PROGRESSIVE:
         SOBRENOME GEICO:
+
+        ### REMINDERS:
+        - Identify the car model based on the provided VIN, and then fill in the VEÍCULO field with the format: Year - Name of the Vehicle (e.g., 2008 - Dodge Ram 1500). Make sure the year and the model name are correctly matched to the VIN.
+        - **Ensure that all clients and vehicles are listed separately before listing shared information.**
+        - **Put everything to uppercase.** Capitalize everything except the password, always keep it as cnh12345678.
+        - If there are more than one vehicle, create a separate entry for each vehicle containing the fields: VEICULO, VIN, FINANCIADO or QUITADO.
+        - The information is in Portuguese. If the word "quitado" appears, change the status from "FINANCIADO" to "QUITADO".
+        - Remove all "-" characters from the beginning of each line and any other caracters that may apply markdown on the text.
+
+        
 
         `,
       },
