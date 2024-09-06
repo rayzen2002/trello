@@ -103,8 +103,7 @@ export async function templateCard(description) {
         2. **For each client**, list the information in the following format:
             CLIENTE: [NAME]
             DRIVER NUMBER: 
-            DOB: 
-            DATA DA 1ª CNH: 
+            DOB:  
             DATA DA 1ª DRIVER: 
         3. **List each vehicle separately.** For each vehicle associated with a client, use the following format:
             VEICULO: [Year - Vehicle Name]
@@ -129,19 +128,16 @@ export async function templateCard(description) {
         CLIENTE: CICLANO EXEMPLO
         DRIVER:
         DOB: 
-        DATA DA 1ª CNH:
-        DATA DA 1ª DRIVER: NÃO TEM
+        DATA DA 1ª DRIVER: 
 
         CLIENTE: EMANUEL MAGALHAES MARTINS
         DRIVER:
         DOB: 
-        DATA DA 1ª CNH:
         DATA DA 1ª DRIVER: NÃO TEM
 
         CLIENTE: FULANO BELATRANO
         DRIVER:
         DOB: 
-        DATA DA 1ª CNH:
         DATA DA 1ª DRIVER: NÃO TEM
 
         ENDEREÇO: RUA MONSENHOR FURTADO 591
@@ -174,10 +170,7 @@ export async function templateCard(description) {
         - **Put everything to uppercase.** Capitalize everything except the password, always keep it as cnh12345678.
         - If there are more than one vehicle, create a separate entry for each vehicle containing the fields: VEICULO, VIN, FINANCIADO or QUITADO.
         - The information is in Portuguese. If the word "quitado" appears, change the status from "FINANCIADO" to "QUITADO".
-        - Remove all "-" characters from the beginning of each line and any other caracters that may apply markdown on the text.
-
-        
-
+        - Remove all "-" characters from the beginning of each line and any other caracters that may apply markdown on the text. 
         `,
       },
     ],
