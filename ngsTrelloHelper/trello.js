@@ -1,4 +1,4 @@
-import fs from 'fs/promises'
+import fs from 'fs'
 import path from 'path'
 import dotenv from 'dotenv'
 import {
@@ -10,11 +10,13 @@ import { editCard } from './helpers/edit-card.js'
 import { getCardDesc } from './helpers/get-card-description.js'
 import { downloadAllAttachments } from './helpers/download-all-attachments.js'
 import { fileURLToPath } from 'url'
+import { preprocessImage } from './helpers/preprocessImage.js'
 
 dotenv.config()
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
 const downloadsDir = path.join(__dirname, 'helpers/downloads')
+const preprocessedDir = path.join(__dirname, 'helpers/preprocessed')
 
 export async function descriptionOnTemplate(id) {
   try {
@@ -33,22 +35,29 @@ export async function extractInfoFromDocs(id) {
   try {
     await downloadAllAttachments(id)
 
-    const imageFiles = (await fs.readdir(downloadsDir)).filter((file) =>
-      ['.png', '.jpg', '.jpeg', '.pdf'].some((ext) => file.endsWith(ext)),
+    // Verifica se existem imagens para processar
+    const imageFiles = (await fs.promises.readdir(downloadsDir)).filter(
+      (file) =>
+        ['.png', '.jpg', '.jpeg', '.pdf'].some((ext) => file.endsWith(ext)),
     )
 
     if (imageFiles.length === 0) {
-      throw new Error(`No images found in the directory: ${downloadsDir}`)
+      console.log(`Nenhuma imagem encontrada na pasta: ${downloadsDir}`)
+      return {} // Retorna um objeto vazio se não houver imagens
     }
 
+    // Processa imagens em paralelo
     const processedImagesPromises = imageFiles.map(async (file) => {
       const imagePath = path.join(downloadsDir, file)
-      const imageBuffer = await fs.readFile(imagePath)
+      const outputPath = path.join(preprocessedDir, `preprocessed_${file}`)
 
-      // Aqui removemos o preprocessamento
-      await fs.unlink(imagePath)
+      await preprocessImage(imagePath, outputPath)
 
-      return imageBuffer
+      const processedImageBuffer = await fs.promises.readFile(outputPath)
+      await fs.promises.unlink(imagePath)
+      await fs.promises.unlink(outputPath)
+
+      return processedImageBuffer
     })
 
     const processedImages = await Promise.all(processedImagesPromises)
