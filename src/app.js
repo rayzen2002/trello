@@ -4,6 +4,9 @@ import fastifyCors from '@fastify/cors'
 import fastifyServerTimeout from 'fastify-server-timeout'
 
 export const app = fastify()
+app.register(fastifyCors, {
+  origin: 'https://ngs-eight.vercel.app',
+})
 
 app.register(fastifyServerTimeout, {
   timeout: 120000, // 2 minutos
@@ -11,9 +14,7 @@ app.register(fastifyServerTimeout, {
     reply.send({ error: 'Request timed out' })
   },
 })
-app.register(fastifyCors, {
-  origin: true,
-})
+
 app.register(editCard)
 app.get('/', () => {
   return 'hello world'
