@@ -1,4 +1,4 @@
-import fs from 'fs'
+import fs from 'fs/promises'
 import path from 'path'
 import dotenv from 'dotenv'
 import {
@@ -6,7 +6,6 @@ import {
   readAttachments,
   templateCard,
 } from './openai.js'
-// import { logPerformance } from '../src/routes/edit-card.js'
 import { editCard } from './helpers/edit-card.js'
 import { getCardDesc } from './helpers/get-card-description.js'
 import { downloadAllAttachments } from './helpers/download-all-attachments.js'
@@ -18,6 +17,9 @@ const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
 const downloadsDir = path.join(__dirname, 'helpers/downloads')
 const preprocessedDir = path.join(__dirname, 'helpers/preprocessed')
+
+const BATCH_SIZE = 2 // Limite o número de arquivos processados simultaneamente
+
 export async function descriptionOnTemplate(id) {
   try {
     const description = await getCardDesc(id)
@@ -26,70 +28,74 @@ export async function descriptionOnTemplate(id) {
     }
     const middleDescription = await templateCard(description)
     return `${description} \n\n---\n\n${middleDescription}`
-    // await editCard(id, `${description} \n\n---\n\n${middleDescription}`)
   } catch (error) {
     console.error('Erro no processo principal', error)
   }
 }
 
 export async function extractInfoFromDocs(id) {
-  await downloadAllAttachments(id)
-  const imageFiles = fs.readdirSync(downloadsDir).filter((file) => {
-    return (
-      file.endsWith('.png') ||
-      file.endsWith('.jpg') ||
-      file.endsWith('.jpeg') ||
-      file.endsWith('.pdf')
+  try {
+    await downloadAllAttachments(id)
+
+    const imageFiles = (await fs.readdir(downloadsDir)).filter((file) =>
+      ['.png', '.jpg', '.jpeg', '.pdf'].some((ext) => file.endsWith(ext)),
     )
-  })
-  if (imageFiles.length === 0) {
-    console.log(`No images found in the directory: ${downloadsDir}`)
-    throw new Error(`No images found in the directory: ${downloadsDir}`)
+
+    if (imageFiles.length === 0) {
+      throw new Error(`No images found in the directory: ${downloadsDir}`)
+    }
+
+    const processBatch = async (files) => {
+      const processedImagesPromises = files.map(async (file) => {
+        const imagePath = path.join(downloadsDir, file)
+        const outputPath = path.join(preprocessedDir, `preprocessed_${file}`)
+
+        await preprocessImage(imagePath, outputPath)
+
+        const processedImageBuffer = await fs.readFile(outputPath)
+        await fs.unlink(imagePath)
+        await fs.unlink(outputPath)
+
+        return processedImageBuffer
+      })
+
+      return Promise.all(processedImagesPromises)
+    }
+
+    let processedImages = []
+    for (let i = 0; i < imageFiles.length; i += BATCH_SIZE) {
+      const batch = imageFiles.slice(i, i + BATCH_SIZE)
+      const batchProcessedImages = await processBatch(batch)
+      processedImages = processedImages.concat(batchProcessedImages)
+    }
+
+    const documentsInfo = await readAttachments(processedImages)
+
+    if (!documentsInfo) {
+      throw new Error('Falha ao extrair informações do documento')
+    }
+
+    return documentsInfo
+  } catch (error) {
+    console.error('Erro ao processar documentos:', error)
+    throw new Error('Erro durante o processamento dos documentos.')
   }
-
-  // Processar todas as imagens de forma paralela
-  const processedImages = await Promise.all(
-    imageFiles.map(async (file) => {
-      const imagePath = path.join(downloadsDir, file)
-      const imageBuffer = fs.readFileSync(imagePath)
-      const outputPath = path.join(preprocessedDir, `preprocessed_${file}`)
-
-      await preprocessImage(imageBuffer, outputPath)
-
-      // Retorna o buffer da imagem processada
-      return fs.readFileSync(outputPath)
-    }),
-  )
-
-  const documentsInfo = await readAttachments(processedImages)
-  if (!documentsInfo) {
-    throw new Error('Falha ao extrair informações do documento')
-  }
-
-  // Deletar os arquivos após o processamento
-  for (const file of imageFiles) {
-    const imagePath = path.join(downloadsDir, file)
-    fs.unlinkSync(imagePath)
-    console.log(`Deleted ${file} from ${downloadsDir}`)
-    const preprocessedImagePath = path.join(
-      preprocessedDir,
-      `preprocessed_${file}`,
-    )
-    fs.unlinkSync(preprocessedImagePath)
-    console.log(`Deleted preprocessed_${file} from ${preprocessedDir}`)
-  }
-  return documentsInfo
 }
 
 export async function editingCard(id, description, documentsInfo) {
-  const oldDescription = await getCardDesc(id)
-  const newDescription = await mixingDescriptionWithTemplate(
-    description,
-    documentsInfo,
-  )
+  try {
+    const [oldDescription, newDescription] = await Promise.all([
+      getCardDesc(id),
+      mixingDescriptionWithTemplate(description, documentsInfo),
+    ])
 
-  if (!newDescription) {
-    throw new Error('Falha ao gerar nova descrição')
+    if (!newDescription) {
+      throw new Error('Falha ao gerar nova descrição')
+    }
+
+    await editCard(id, `${oldDescription} \n\n---\n\n${newDescription}`)
+  } catch (error) {
+    console.error('Erro ao editar o card:', error)
+    throw new Error('Erro ao editar o card.')
   }
-  await editCard(id, `${oldDescription} \n\n---\n\n${newDescription}`)
 }
