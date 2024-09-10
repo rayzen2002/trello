@@ -2,6 +2,8 @@ import path from 'path'
 import fs from 'fs'
 import { fileURLToPath } from 'url'
 
+import axios from 'axios'
+
 export async function downloadAttachment(url, filename) {
   const __filename = fileURLToPath(import.meta.url)
   const __dirname = path.dirname(__filename)
@@ -19,18 +21,17 @@ export async function downloadAttachment(url, filename) {
   if (!fs.existsSync(preprocessedDir)) {
     fs.mkdirSync(preprocessedDir)
   }
+
   try {
-    const response = await fetch(url, {
+    const response = await axios.get(url, {
+      responseType: 'arraybuffer',
       headers: {
         Authorization: `OAuth oauth_consumer_key="${process.env.apiKey}", oauth_token="${process.env.token}", oauth_signature_method="HMAC-SHA1", oauth_timestamp="${timestamp}", oauth_nonce="${nonce}", oauth_version="1.0", oauth_signature="${signature}"`,
       },
     })
-    if (!response.ok) {
-      throw new Error(`Failed to fetch ${url}: ${response.statusText}`)
-    }
-    const buffer = await response.buffer()
+
     const filePath = path.join(downloadsDir, filename)
-    fs.writeFileSync(filePath, buffer)
+    fs.writeFileSync(filePath, response.data)
     console.log(`Downloaded ${filename} to ${filePath}`)
   } catch (error) {
     console.error(`Erro ao baixar o anexo ${filename}`, error)

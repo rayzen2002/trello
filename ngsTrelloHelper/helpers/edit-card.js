@@ -14,6 +14,7 @@ axiosRetry(axios, {
 
 export async function editCard(cardId, description) {
   const endpoint = `https://api.trello.com/1/cards/${cardId}?key=${process.env.apiKey}&token=${process.env.token}`
+
   try {
     const response = await axios.put(
       endpoint,
