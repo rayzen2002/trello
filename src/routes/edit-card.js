@@ -1,8 +1,8 @@
 import { z } from 'zod'
 import {
-  descriptionOnTemplate,
   editingCard,
   extractInfoFromDocs,
+  fillTemplateWithSalesInfo,
 } from '../../ngsTrelloHelper/trello.js'
 import { getCardDesc } from '../../ngsTrelloHelper/helpers/get-card-description.js'
 
@@ -23,12 +23,13 @@ export async function editCard(server) {
       if (!description) {
         return res.status(404).send({ message: 'Card não encontrado' }) // Erro 404 para card não existente
       }
-      const [infoFromDocs, middleDescription] = await Promise.all([
-        extractInfoFromDocs(card.id),
-        descriptionOnTemplate(card.id),
-      ])
+      // const [infoFromDocs, middleDescription] = await Promise.all([
+      //   extractInfoFromDocs(card.id),
+      //   fillTemplateWithSalesInfo(card.id),
+      // ])
+      const middleDescription = await fillTemplateWithSalesInfo(card.id)
 
-      await editingCard(card.id, middleDescription, infoFromDocs)
+      await editingCard(card.id, middleDescription, '')
       res.status(200).send({ message: 'Card alterado com sucesso' })
     } catch (error) {
       console.error('Erro ao tentar alterar o card:', error)

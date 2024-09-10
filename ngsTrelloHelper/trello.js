@@ -18,7 +18,7 @@ const __dirname = path.dirname(__filename)
 const downloadsDir = path.join(__dirname, 'helpers/downloads')
 const preprocessedDir = path.join(__dirname, 'helpers/preprocessed')
 
-export async function descriptionOnTemplate(id) {
+export async function fillTemplateWithSalesInfo(id) {
   try {
     const description = await getCardDesc(id)
     if (!description) {
@@ -76,16 +76,16 @@ export async function extractInfoFromDocs(id) {
 
 export async function editingCard(id, description, documentsInfo) {
   try {
-    const [oldDescription, newDescription] = await Promise.all([
-      getCardDesc(id),
-      mixingDescriptionWithTemplate(description, documentsInfo),
-    ])
-
-    if (!newDescription) {
+    // const [oldDescription, newDescription] = await Promise.all([
+    //   getCardDesc(id),
+    //   mixingDescriptionWithTemplate(description, documentsInfo),
+    // ])
+    const oldDescription = await getCardDesc(id)
+    if (!description) {
       throw new Error('Falha ao gerar nova descrição')
     }
 
-    await editCard(id, `${oldDescription} \n\n---\n\n${newDescription}`)
+    await editCard(id, `${oldDescription} \n\n---\n\n${description}`)
   } catch (error) {
     console.error('Erro ao editar o card:', error)
     throw new Error('Erro ao editar o card.')
