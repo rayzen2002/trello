@@ -46,23 +46,27 @@ export async function extractInfoFromDocs(id) {
     console.log(`No images found in the directory: ${downloadsDir}`)
     throw new Error(`No images found in the directory: ${downloadsDir}`)
   }
-  const processedImages = []
-  for (const file of imageFiles) {
-    const imagePath = path.join(downloadsDir, file)
-    const imageBuffer = fs.readFileSync(imagePath)
-    const outputPath = path.join(preprocessedDir, `preprocessed_${file}`)
 
-    await preprocessImage(imageBuffer, outputPath)
+  // Processar todas as imagens de forma paralela
+  const processedImages = await Promise.all(
+    imageFiles.map(async (file) => {
+      const imagePath = path.join(downloadsDir, file)
+      const imageBuffer = fs.readFileSync(imagePath)
+      const outputPath = path.join(preprocessedDir, `preprocessed_${file}`)
 
-    // Ler a imagem preprocessada
-    const processedImageBuffer = fs.readFileSync(outputPath)
-    processedImages.push(processedImageBuffer)
-  }
+      await preprocessImage(imageBuffer, outputPath)
+
+      // Retorna o buffer da imagem processada
+      return fs.readFileSync(outputPath)
+    }),
+  )
+
   const documentsInfo = await readAttachments(processedImages)
   if (!documentsInfo) {
     throw new Error('Falha ao extrair informações do documento')
   }
 
+  // Deletar os arquivos após o processamento
   for (const file of imageFiles) {
     const imagePath = path.join(downloadsDir, file)
     fs.unlinkSync(imagePath)
