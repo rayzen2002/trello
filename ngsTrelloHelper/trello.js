@@ -10,15 +10,11 @@ import { editCard } from './helpers/edit-card.js'
 import { getCardDesc } from './helpers/get-card-description.js'
 import { downloadAllAttachments } from './helpers/download-all-attachments.js'
 import { fileURLToPath } from 'url'
-import { preprocessImage } from './helpers/preprocessImage.js'
 
 dotenv.config()
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
 const downloadsDir = path.join(__dirname, 'helpers/downloads')
-const preprocessedDir = path.join(__dirname, 'helpers/preprocessed')
-
-const BATCH_SIZE = 2 // Limite o número de arquivos processados simultaneamente
 
 export async function descriptionOnTemplate(id) {
   try {
@@ -45,30 +41,17 @@ export async function extractInfoFromDocs(id) {
       throw new Error(`No images found in the directory: ${downloadsDir}`)
     }
 
-    const processBatch = async (files) => {
-      const processedImagesPromises = files.map(async (file) => {
-        const imagePath = path.join(downloadsDir, file)
-        const outputPath = path.join(preprocessedDir, `preprocessed_${file}`)
+    const processedImagesPromises = imageFiles.map(async (file) => {
+      const imagePath = path.join(downloadsDir, file)
+      const imageBuffer = await fs.readFile(imagePath)
 
-        await preprocessImage(imagePath, outputPath)
+      // Aqui removemos o preprocessamento
+      await fs.unlink(imagePath)
 
-        const processedImageBuffer = await fs.readFile(outputPath)
-        await fs.unlink(imagePath)
-        await fs.unlink(outputPath)
+      return imageBuffer
+    })
 
-        return processedImageBuffer
-      })
-
-      return Promise.all(processedImagesPromises)
-    }
-
-    let processedImages = []
-    for (let i = 0; i < imageFiles.length; i += BATCH_SIZE) {
-      const batch = imageFiles.slice(i, i + BATCH_SIZE)
-      const batchProcessedImages = await processBatch(batch)
-      processedImages = processedImages.concat(batchProcessedImages)
-    }
-
+    const processedImages = await Promise.all(processedImagesPromises)
     const documentsInfo = await readAttachments(processedImages)
 
     if (!documentsInfo) {
