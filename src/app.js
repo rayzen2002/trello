@@ -9,7 +9,7 @@ app.register(fastifyCors, {
 })
 
 app.register(fastifyServerTimeout, {
-  timeout: 120000, // 2 minutos
+  timeout: 360000, // 6 minutos
   onTimeout: (req, reply) => {
     reply.send({ error: 'Request timed out' })
   },
