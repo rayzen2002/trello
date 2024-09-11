@@ -80,12 +80,12 @@ export async function editingCard(id, description, documentsInfo) {
     //   getCardDesc(id),
     //   mixingDescriptionWithTemplate(description, documentsInfo),
     // ])
-    const oldDescription = await getCardDesc(id)
+    // const oldDescription = await getCardDesc(id)
     if (!description) {
       throw new Error('Falha ao gerar nova descrição')
     }
 
-    await editCard(id, `${oldDescription} \n\n---\n\n${description}`)
+    await editCard(id, description)
   } catch (error) {
     console.error('Erro ao editar o card:', error)
     throw new Error('Erro ao editar o card.')
