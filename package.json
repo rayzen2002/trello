@@ -14,6 +14,7 @@
   "description": "",
   "dependencies": {
     "@fastify/cors": "^9.0.1",
+    "@google-cloud/vision": "^4.3.2",
     "@techstark/opencv-js": "^4.9.0-release.3",
     "axios": "^1.7.7",
     "axios-oauth-1.0a": "^0.3.6",

@@ -23,13 +23,12 @@ export async function editCard(server) {
       if (!description) {
         return res.status(404).send({ message: 'Card não encontrado' }) // Erro 404 para card não existente
       }
-      // const [infoFromDocs, middleDescription] = await Promise.all([
-      //   extractInfoFromDocs(card.id),
-      //   fillTemplateWithSalesInfo(card.id),
-      // ])
-      const middleDescription = await fillTemplateWithSalesInfo(card.id)
+      const [infoFromDocs, middleDescription] = await Promise.all([
+        extractInfoFromDocs(card.id),
+        fillTemplateWithSalesInfo(card.id),
+      ])
 
-      await editingCard(card.id, middleDescription, '')
+      await editingCard(card.id, middleDescription, infoFromDocs)
       res.status(200).send({ message: 'Card alterado com sucesso' })
     } catch (error) {
       console.error('Erro ao tentar alterar o card:', error)

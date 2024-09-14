@@ -10,14 +10,20 @@ import { editCard } from './helpers/edit-card.js'
 import { getCardDesc } from './helpers/get-card-description.js'
 import { downloadAllAttachments } from './helpers/download-all-attachments.js'
 import { fileURLToPath } from 'url'
-import { preprocessImage } from './helpers/preprocessImage.js'
+import vision from '@google-cloud/vision'
 
 dotenv.config()
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
 const downloadsDir = path.join(__dirname, 'helpers/downloads')
-const preprocessedDir = path.join(__dirname, 'helpers/preprocessed')
 
+const client = new vision.ImageAnnotatorClient({
+  credentials: {
+    client_email: process.env.GOOGLE_CLIENT_EMAIL,
+    private_key: process.env.GOOGLE_PRIVATE_KEY.replace(/\\n/g, '\n'), // Corrigir a quebra de linha
+  },
+  projectId: process.env.GOOGLE_PROJECT_ID,
+})
 export async function fillTemplateWithSalesInfo(id) {
   try {
     const description = await getCardDesc(id)
@@ -35,33 +41,36 @@ export async function extractInfoFromDocs(id) {
   try {
     await downloadAllAttachments(id)
 
-    // Verifica se existem imagens para processar
     const imageFiles = (await fs.promises.readdir(downloadsDir)).filter(
-      (file) =>
-        ['.png', '.jpg', '.jpeg', '.pdf'].some((ext) => file.endsWith(ext)),
+      (file) => ['.png', '.jpg', '.jpeg'].some((ext) => file.endsWith(ext)),
     )
 
     if (imageFiles.length === 0) {
       console.log(`Nenhuma imagem encontrada na pasta: ${downloadsDir}`)
-      return {} // Retorna um objeto vazio se não houver imagens
+      return {}
     }
 
-    // Processa imagens em paralelo
-    const processedImagesPromises = imageFiles.map(async (file) => {
-      const imagePath = path.join(downloadsDir, file)
-      const outputPath = path.join(preprocessedDir, `preprocessed_${file}`)
-
-      await preprocessImage(imagePath, outputPath)
-
-      const processedImageBuffer = await fs.promises.readFile(outputPath)
-      await fs.promises.unlink(imagePath)
-      await fs.promises.unlink(outputPath)
-
-      return processedImageBuffer
+    const ocrPromises = imageFiles.map(async (file) => {
+      try {
+        const imagePath = path.join(downloadsDir, file)
+        console.log(`Processando o arquivo: ${imagePath}`) // Adiciona log
+        const [result] = await client.textDetection(imagePath)
+        const detections = result.textAnnotations
+        console.log(
+          `Texto extraído do arquivo ${file}: ${detections.length > 0 ? detections[0].description : 'Nenhum texto detectado'}`,
+        ) // Adiciona log
+        const extractedText =
+          detections.length > 0 ? detections[0].description : ''
+        await fs.promises.unlink(imagePath)
+        return extractedText
+      } catch (error) {
+        console.error(`Erro ao processar o arquivo ${file}:`, error)
+        return ''
+      }
     })
 
-    const processedImages = await Promise.all(processedImagesPromises)
-    const documentsInfo = await readAttachments(processedImages)
+    const extractedTexts = await Promise.all(ocrPromises)
+    const documentsInfo = await readAttachments(extractedTexts)
 
     if (!documentsInfo) {
       throw new Error('Falha ao extrair informações do documento')
@@ -76,16 +85,16 @@ export async function extractInfoFromDocs(id) {
 
 export async function editingCard(id, description, documentsInfo) {
   try {
-    // const [oldDescription, newDescription] = await Promise.all([
-    //   getCardDesc(id),
-    //   mixingDescriptionWithTemplate(description, documentsInfo),
-    // ])
-    // const oldDescription = await getCardDesc(id)
+    const [oldDescription, newDescription] = await Promise.all([
+      getCardDesc(id),
+      mixingDescriptionWithTemplate(description, documentsInfo),
+    ])
+
     if (!description) {
       throw new Error('Falha ao gerar nova descrição')
     }
 
-    await editCard(id, description)
+    await editCard(id, `${oldDescription} \n\n---\n\n${newDescription}`)
   } catch (error) {
     console.error('Erro ao editar o card:', error)
     throw new Error('Erro ao editar o card.')
